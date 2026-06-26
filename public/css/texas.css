@@ -1,0 +1,489 @@
+@import url('https://fonts.googleapis.com/css2?family=Rye&family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --tx-navy: #002868;
+  --tx-red: #BF0A30;
+  --tx-gold: #D4A437;
+  --tx-dark: #1a1a2e;
+  --tx-darker: #0f0f1a;
+  --tx-cream: #FFF8E7;
+  --tx-white: #ffffff;
+  --tx-gray: #2d2d44;
+  --tx-light-gray: #f4f4f8;
+  --tx-star: #D4A437;
+  --gradient-hero: linear-gradient(135deg, #002868 0%, #1a1a2e 50%, #BF0A30 100%);
+  --gradient-gold: linear-gradient(135deg, #D4A437 0%, #E8C86A 50%, #D4A437 100%);
+  --gradient-dark: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+  --shadow-gold: 0 4px 20px rgba(212, 164, 55, 0.3);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--tx-darker);
+  color: var(--tx-white);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+h1, h2, h3, .brand-text {
+  font-family: 'Rye', cursive;
+}
+
+h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+}
+
+.navbar-texas {
+  background: rgba(0, 40, 104, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid var(--tx-gold);
+  padding: 0.75rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar-texas .brand-text {
+  color: var(--tx-gold);
+  font-size: 1.5rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: 1px;
+}
+
+.navbar-texas .nav-link {
+  color: var(--tx-white) !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem !important;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.navbar-texas .nav-link:hover,
+.navbar-texas .nav-link.active {
+  color: var(--tx-gold) !important;
+  background: rgba(212, 164, 55, 0.1);
+}
+
+.nav-link.btn-deposit {
+  background: var(--gradient-gold) !important;
+  color: var(--tx-dark) !important;
+  font-weight: 700 !important;
+  padding: 0.5rem 1.5rem !important;
+  border-radius: 25px !important;
+  animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 5px rgba(212, 164, 55, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(212, 164, 55, 0.8); }
+}
+
+.hero-section {
+  background: var(--gradient-hero);
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35' fill='none' stroke='rgba(212,164,55,0.08)' stroke-width='0.5'/%3E%3C/svg%3E") repeat;
+  background-size: 150px;
+  animation: floatStars 30s linear infinite;
+}
+
+@keyframes floatStars {
+  from { transform: translateY(0); }
+  to { transform: translateY(-150px); }
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+  margin-bottom: 1.5rem;
+}
+
+.hero-title .gold-text {
+  color: var(--tx-gold);
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 2rem;
+  max-width: 600px;
+}
+
+.btn-texas {
+  background: var(--gradient-gold);
+  color: var(--tx-dark);
+  font-weight: 700;
+  padding: 0.75rem 2rem;
+  border-radius: 30px;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-texas:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-gold);
+  color: var(--tx-dark);
+}
+
+.btn-texas-outline {
+  background: transparent;
+  color: var(--tx-gold);
+  border: 2px solid var(--tx-gold);
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  border-radius: 30px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.btn-texas-outline:hover {
+  background: var(--tx-gold);
+  color: var(--tx-dark);
+}
+
+.section-title {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  color: var(--tx-gold);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.section-subtitle {
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+  font-size: 1.1rem;
+  margin-bottom: 3rem;
+}
+
+.card-texas {
+  background: var(--tx-gray);
+  border: 1px solid rgba(212, 164, 55, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.card-texas:hover {
+  transform: translateY(-5px);
+  border-color: var(--tx-gold);
+  box-shadow: var(--shadow-gold);
+}
+
+.card-texas .card-icon {
+  width: 60px;
+  height: 60px;
+  background: var(--gradient-gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: var(--tx-dark);
+}
+
+.card-texas .card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.card-texas .card-text {
+  color: rgba(255,255,255,0.7);
+  line-height: 1.6;
+}
+
+.games-section {
+  background: var(--gradient-dark);
+  padding: 5rem 0;
+}
+
+.game-card {
+  background: var(--tx-gray);
+  border: 1px solid rgba(212, 164, 55, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.game-card:hover {
+  transform: scale(1.03);
+  border-color: var(--tx-gold);
+  box-shadow: var(--shadow-gold);
+}
+
+.game-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.game-card .game-info {
+  padding: 1.25rem;
+}
+
+.game-card .game-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.game-card .game-btn {
+  display: inline-block;
+  background: var(--gradient-gold);
+  color: var(--tx-dark);
+  font-weight: 600;
+  padding: 0.4rem 1.2rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.deposit-section {
+  background: linear-gradient(135deg, #1a1a2e 0%, #002868 100%);
+  padding: 5rem 0;
+}
+
+.deposit-form-card {
+  background: var(--tx-gray);
+  border: 2px solid var(--tx-gold);
+  border-radius: 20px;
+  padding: 3rem;
+  max-width: 500px;
+  margin: 0 auto;
+  box-shadow: var(--shadow-card);
+}
+
+.deposit-form-card .form-label {
+  color: var(--tx-gold);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.deposit-form-card .form-control {
+  background: var(--tx-darker);
+  border: 1px solid rgba(212, 164, 55, 0.3);
+  color: var(--tx-white);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.deposit-form-card .form-control:focus {
+  border-color: var(--tx-gold);
+  box-shadow: 0 0 0 3px rgba(212, 164, 55, 0.2);
+  background: var(--tx-darker);
+  color: var(--tx-white);
+}
+
+.deposit-form-card .form-control::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+.quick-amount-btn {
+  background: rgba(212, 164, 55, 0.1);
+  border: 1px solid rgba(212, 164, 55, 0.3);
+  color: var(--tx-gold);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.quick-amount-btn:hover,
+.quick-amount-btn.active {
+  background: var(--tx-gold);
+  color: var(--tx-dark);
+  border-color: var(--tx-gold);
+}
+
+.ticker-section {
+  background: var(--tx-navy);
+  border-top: 1px solid rgba(212, 164, 55, 0.3);
+  border-bottom: 1px solid rgba(212, 164, 55, 0.3);
+  padding: 1rem 0;
+  overflow: hidden;
+}
+
+.ticker-track {
+  display: flex;
+  gap: 3rem;
+  animation: scroll 30s linear infinite;
+  white-space: nowrap;
+}
+
+@keyframes scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--tx-gold);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.ticker-item .amount {
+  color: #4CAF50;
+  font-weight: 700;
+}
+
+.footer-texas {
+  background: var(--tx-darker);
+  border-top: 2px solid var(--tx-gold);
+  padding: 3rem 0 1.5rem;
+}
+
+.footer-brand {
+  font-family: 'Rye', cursive;
+  font-size: 1.5rem;
+  color: var(--tx-gold);
+  margin-bottom: 1rem;
+}
+
+.footer-links a {
+  color: rgba(255,255,255,0.7);
+  display: block;
+  padding: 0.25rem 0;
+}
+
+.footer-links a:hover {
+  color: var(--tx-gold);
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 1.5rem;
+  margin-top: 2rem;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.85rem;
+}
+
+.star-divider {
+  text-align: center;
+  margin: 2rem 0;
+  color: var(--tx-gold);
+  font-size: 1.5rem;
+  letter-spacing: 1rem;
+}
+
+.rules-section {
+  background: var(--tx-darker);
+  padding: 4rem 0;
+}
+
+.rules-list {
+  list-style: none;
+  padding: 0;
+}
+
+.rules-list li {
+  padding: 0.75rem 0;
+  padding-left: 2rem;
+  position: relative;
+  color: rgba(255,255,255,0.8);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.rules-list li::before {
+  content: '\2605';
+  position: absolute;
+  left: 0;
+  color: var(--tx-gold);
+}
+
+.promo-badge {
+  background: var(--gradient-gold);
+  color: var(--tx-dark);
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  display: inline-block;
+}
+
+.open-badge {
+  background: rgba(76, 175, 80, 0.2);
+  border: 1px solid #4CAF50;
+  color: #4CAF50;
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.open-badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: #4CAF50;
+  border-radius: 50%;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    min-height: 60vh;
+    padding: 3rem 0;
+  }
+  .deposit-form-card {
+    padding: 1.5rem;
+    margin: 0 1rem;
+  }
+  .navbar-texas .brand-text {
+    font-size: 1.2rem;
+  }
+}
