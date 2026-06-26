@@ -1,5 +1,15 @@
 const Stripe = require('stripe');
 
+// Collect raw body from request stream for Stripe signature verification
+function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -11,9 +21,9 @@ module.exports = async (req, res) => {
   let event;
 
   try {
-    const rawBody = req.body;
+    const rawBody = await getRawBody(req);
     event = stripe.webhooks.constructEvent(
-      typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody),
+      rawBody,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
@@ -46,4 +56,12 @@ module.exports = async (req, res) => {
   }
 
   return res.status(200).json({ received: true });
+};
+
+// Disable Vercel's default body parser so we can read the raw body
+// for Stripe signature verification
+module.exports.config = {
+  api: {
+    bodyParser: false,
+  },
 };
