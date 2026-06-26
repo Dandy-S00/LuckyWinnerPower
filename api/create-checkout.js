@@ -8,11 +8,12 @@ module.exports = async (req, res) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const { amount, email, username } = req.body;
 
-  if (!amount || amount < 5) {
+  const numAmount = Number(amount);
+  if (!Number.isFinite(numAmount) || numAmount < 5) {
     return res.status(400).json({ error: 'Minimum deposit is $5.00' });
   }
 
-  if (amount > 1000) {
+  if (numAmount > 1000) {
     return res.status(400).json({ error: 'Maximum deposit is $1,000.00' });
   }
 
@@ -27,7 +28,7 @@ module.exports = async (req, res) => {
               name: 'Texas Winners Deposit',
               description: `Account deposit${username ? ' for ' + username : ''}`,
             },
-            unit_amount: Math.round(amount * 100),
+            unit_amount: Math.round(numAmount * 100),
           },
           quantity: 1,
         },
@@ -36,7 +37,7 @@ module.exports = async (req, res) => {
       customer_email: email || undefined,
       metadata: {
         username: username || '',
-        deposit_amount: String(amount),
+        deposit_amount: String(numAmount),
       },
       success_url: `${process.env.BASE_URL || 'https://your-domain.vercel.app'}/deposit-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.BASE_URL || 'https://your-domain.vercel.app'}/deposit.html?canceled=true`,
