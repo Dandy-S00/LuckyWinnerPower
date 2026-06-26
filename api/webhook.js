@@ -1,7 +1,15 @@
 const Stripe = require('stripe');
 
-// Collect raw body from request stream for Stripe signature verification
+// Get raw body for Stripe signature verification.
+// In newer Vercel runtimes with bodyParser:false, req.body is already a Buffer.
+// Falls back to reading from stream for compatibility.
 function getRawBody(req) {
+  if (Buffer.isBuffer(req.body)) {
+    return Promise.resolve(req.body);
+  }
+  if (typeof req.body === 'string') {
+    return Promise.resolve(Buffer.from(req.body));
+  }
   return new Promise((resolve, reject) => {
     const chunks = [];
     req.on('data', (chunk) => chunks.push(chunk));
