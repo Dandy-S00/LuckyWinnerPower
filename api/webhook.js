@@ -1,4 +1,53 @@
 const Stripe = require('stripe');
+const { createClient } = require('@supabase/supabase-js');
+
+// Record a confirmed deposit into Supabase using the service-role key.
+// The service-role key bypasses RLS and must only ever be used server-side.
+async function recordDeposit(session) {
+  const url = process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    // Fail loudly so the webhook returns non-200 and Stripe retries, rather
+    // than silently dropping a paid deposit in a misconfigured deployment.
+    throw new Error('Supabase service credentials are not configured.');
+  }
+  const supabase = createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const row = {
+    user_id: session.metadata?.user_id || null,
+    stripe_session_id: session.id,
+    username: session.metadata?.username || null,
+    email: session.customer_email || null,
+    amount: session.amount_total != null ? session.amount_total / 100 : null,
+    status: 'completed',
+  };
+
+  // upsert on the unique stripe_session_id so retried webhook events
+  // (Stripe may deliver the same event more than once) don't double-credit.
+  async function insertRow(r) {
+    return supabase
+      .from('deposits')
+      .upsert(r, { onConflict: 'stripe_session_id', ignoreDuplicates: true });
+  }
+
+  let { error } = await insertRow(row);
+
+  // If the user deleted their account mid-checkout, the user_id no longer
+  // exists in auth.users and the FK (23503) rejects the insert. Still record
+  // the deposit (we keep the email) by detaching the orphaned user_id rather
+  // than letting Stripe retry the same event forever.
+  if (error && error.code === '23503' && row.user_id) {
+    console.warn('Deposit user_id no longer exists; recording without user_id.');
+    ({ error } = await insertRow({ ...row, user_id: null }));
+  }
+
+  if (error) {
+    // Throw so the handler returns non-200 and Stripe retries the (idempotent) event.
+    throw new Error('Failed to record deposit: ' + error.message);
+  }
+}
 
 // Get raw body for Stripe signature verification.
 // In newer Vercel runtimes with bodyParser:false, req.body is already a Buffer.
@@ -49,6 +98,13 @@ module.exports = async (req, res) => {
         amount: session.amount_total / 100,
         username: session.metadata?.username,
       });
+      try {
+        await recordDeposit(session);
+      } catch (err) {
+        // Return non-200 so Stripe retries delivery; the upsert is idempotent.
+        console.error('Error recording deposit:', err.message);
+        return res.status(500).json({ error: 'Failed to record deposit' });
+      }
       break;
     }
     case 'payment_intent.payment_failed': {

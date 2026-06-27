@@ -18,6 +18,9 @@
     "STRIPE_SECRET_KEY": "@stripe-secret-key",
     "STRIPE_PUBLISHABLE_KEY": "@stripe-publishable-key",
     "STRIPE_WEBHOOK_SECRET": "@stripe-webhook-secret",
-    "BASE_URL": "@base-url"
+    "BASE_URL": "@base-url",
+    "SUPABASE_URL": "@supabase-url",
+    "SUPABASE_ANON_KEY": "@supabase-anon-key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key"
   }
 }

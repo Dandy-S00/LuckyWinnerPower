@@ -8,6 +8,7 @@
     "build": "echo 'Static site - no build step required'"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.39.8",
     "stripe": "14.21.0"
   }
 }

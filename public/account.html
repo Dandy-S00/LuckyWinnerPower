@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account | Texas Winners</title>
+    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/texas.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-texas">
+    <div class="container">
+        <a class="navbar-brand brand-text" href="index.html">
+            <i class="fas fa-star me-2"></i>Texas Winners
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+            <i class="fas fa-bars text-white fs-4"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="link2play.html">Play Games</a></li>
+                <li class="nav-item"><a class="nav-link" href="deposit.html">Deposit</a></li>
+                <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                <li class="nav-item" id="authNav"></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="logoutLink" style="display:none;"><i class="fas fa-right-from-bracket me-1"></i>Log Out</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Auth gate overlay -->
+<div id="authGate" style="position: fixed; inset: 0; background: var(--tx-dark); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+    <div class="text-center" style="color: var(--tx-gold);">
+        <i class="fas fa-spinner fa-spin" style="font-size: 2.5rem;"></i>
+        <p class="mt-3">Loading your account...</p>
+    </div>
+</div>
+
+<!-- Account Section -->
+<section class="deposit-section" style="min-height: 80vh;">
+    <div class="container">
+        <h2 class="section-title"><i class="fas fa-user-circle me-2" style="font-size: 0.7em;"></i> My Account</h2>
+        <p class="section-subtitle">Howdy, partner</p>
+
+        <div class="deposit-form-card" style="max-width: 560px; margin: 0 auto;">
+            <div class="mb-3">
+                <span style="color: rgba(255,255,255,0.5);">Email</span>
+                <div id="acctEmail" style="color: #fff; font-size: 1.1rem;">—</div>
+            </div>
+            <div class="mb-3">
+                <span style="color: rgba(255,255,255,0.5);">Date of Birth</span>
+                <div id="acctDob" style="color: #fff; font-size: 1.1rem;">—</div>
+            </div>
+            <div class="mb-4">
+                <span style="color: rgba(255,255,255,0.5);">Age Verification</span>
+                <div id="acctVerified" style="color: #4CAF50; font-size: 1.1rem;">
+                    <i class="fas fa-check-circle me-1"></i> Verified 18+
+                </div>
+            </div>
+            <div class="d-flex gap-3 flex-wrap">
+                <a href="link2play.html" class="btn-texas"><i class="fas fa-gamepad me-2"></i>Play Games</a>
+                <a href="deposit.html" class="btn-texas-outline"><i class="fas fa-dollar-sign me-2"></i>Deposit</a>
+                <button class="btn-texas-outline" id="acctLogout"><i class="fas fa-right-from-bracket me-2"></i>Log Out</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer-texas">
+    <div class="container">
+        <div class="footer-bottom text-center">
+            <p>&copy; 2024 Texas Winners. All rights reserved. | Must be 18+ to play.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8"></script>
+<script src="js/auth.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+    const session = await window.txAuth.requireAuth();
+    if (!session) return;
+    const user = session.user;
+    document.getElementById('acctEmail').textContent = user.email || '—';
+    const dob = user.user_metadata && user.user_metadata.date_of_birth;
+    document.getElementById('acctDob').textContent = dob || 'Not provided';
+    document.getElementById('authGate').style.display = 'none';
+
+    document.getElementById('acctLogout').addEventListener('click', async function () {
+        await window.txAuth.signOut();
+        window.location.href = 'index.html';
+    });
+});
+</script>
+</body>
+</html>
