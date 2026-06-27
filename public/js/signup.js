@@ -8,7 +8,12 @@ document.addEventListener('DOMContentLoaded', function () {
   // Nudge the date picker: latest selectable DOB is exactly 18 years ago.
   const cutoff = new Date();
   cutoff.setFullYear(cutoff.getFullYear() - 18);
-  dobInput.max = cutoff.toISOString().split('T')[0];
+  // Format from local date parts (not toISOString, which is UTC and can be
+  // off by one day in non-UTC timezones).
+  const y = cutoff.getFullYear();
+  const m = String(cutoff.getMonth() + 1).padStart(2, '0');
+  const d = String(cutoff.getDate()).padStart(2, '0');
+  dobInput.max = y + '-' + m + '-' + d;
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
