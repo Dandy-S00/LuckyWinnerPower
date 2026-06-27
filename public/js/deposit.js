@@ -61,8 +61,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       return;
     }
 
-    if (!amount || amount < 5) {
-      showError('Minimum deposit is $5.00.');
+    if (!amount || amount < 1) {
+      showError('Minimum deposit is $1.00.');
       return;
     }
 

@@ -7,7 +7,8 @@ module.exports = async (req, res) => {
     publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
     supabaseUrl: process.env.SUPABASE_URL || '',
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
-    minDeposit: 5,
+    starterMin: 5,
+    coinsMin: 1,
     maxDeposit: 1000,
     minAge: 18,
   });

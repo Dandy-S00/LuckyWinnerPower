@@ -1,4 +1,5 @@
 const Stripe = require('stripe');
+const { createClient } = require('@supabase/supabase-js');
 const { verifyUser } = require('../lib/verifyUser');
 
 module.exports = async (req, res) => {
@@ -18,9 +19,36 @@ module.exports = async (req, res) => {
   const body = req.body || {};
   const email = user.email;
 
+  // Determine whether this is the user's first purchase by counting
+  // completed deposits. Fail safe: treat as first-time (stricter $5 floor).
+  let isFirstPurchase = true;
+  try {
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { persistSession: false, autoRefreshToken: false } },
+    );
+    const { count, error } = await supabase
+      .from('deposits')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'completed');
+
+    if (!error) {
+      isFirstPurchase = count === 0;
+    }
+  } catch (_) {
+    // On any unexpected error, keep isFirstPurchase = true (fail safe).
+  }
+
+  const minAmount = isFirstPurchase ? 5 : 1;
+  const productType = isFirstPurchase ? 'Starter Pack' : 'Coins';
+
   const numAmount = Number(body.amount);
-  if (!Number.isFinite(numAmount) || numAmount < 5) {
-    return res.status(400).json({ error: 'Minimum deposit is $5.00' });
+  if (!Number.isFinite(numAmount) || numAmount < minAmount) {
+    return res.status(400).json({
+      error: `Minimum ${productType} deposit is $${minAmount}.00`,
+    });
   }
 
   if (numAmount > 1000) {
@@ -38,8 +66,10 @@ module.exports = async (req, res) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Texas Winners Deposit',
-              description: `Account deposit${username ? ' for ' + username : ''}`,
+              name: productType,
+              description: isFirstPurchase
+                ? `Starter pack${username ? ' for ' + username : ''}`
+                : `Coins${username ? ' for ' + username : ''}`,
             },
             unit_amount: Math.round(numAmount * 100),
           },
@@ -52,6 +82,8 @@ module.exports = async (req, res) => {
         user_id: user.id,
         username: username || '',
         deposit_amount: String(numAmount),
+        is_first_purchase: String(isFirstPurchase),
+        product_type: productType,
       },
       success_url: `${process.env.BASE_URL || 'https://your-domain.vercel.app'}/deposit-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.BASE_URL || 'https://your-domain.vercel.app'}/deposit.html?canceled=true`,
