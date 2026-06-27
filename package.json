@@ -1,0 +1,13 @@
+{
+  "name": "texas-winners-power",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Texas-themed sweepstakes platform with Stripe deposits",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build step required'"
+  },
+  "dependencies": {
+    "stripe": "14.21.0"
+  }
+}
