@@ -1,9 +1,20 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
   const form = document.getElementById('depositForm');
   const amountInput = document.getElementById('amount');
   const quickBtns = document.querySelectorAll('.quick-amount-btn');
   const submitBtn = document.getElementById('submitBtn');
   const errorMsg = document.getElementById('errorMsg');
+  const emailInput = document.getElementById('email');
+
+  // Require login before depositing; prefill the account email.
+  const session = await window.txAuth.requireAuth();
+  if (!session) return;
+  if (emailInput && session.user.email) {
+    emailInput.value = session.user.email;
+    emailInput.readOnly = true;
+  }
+  const gate = document.getElementById('authGate');
+  if (gate) gate.style.display = 'none';
 
   // Quick amount buttons
   quickBtns.forEach(btn => {
@@ -65,10 +76,18 @@ document.addEventListener('DOMContentLoaded', function () {
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
 
     try {
+      const current = await window.txAuth.getSession();
+      if (!current) {
+        window.location.replace('login.html');
+        return;
+      }
       const response = await fetch('/api/create-checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, email, username }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + current.access_token,
+        },
+        body: JSON.stringify({ amount, username }),
       });
 
       const data = await response.json();

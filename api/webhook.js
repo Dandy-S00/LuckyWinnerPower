@@ -1,4 +1,33 @@
 const Stripe = require('stripe');
+const { createClient } = require('@supabase/supabase-js');
+
+// Record a confirmed deposit into Supabase using the service-role key.
+// The service-role key bypasses RLS and must only ever be used server-side.
+async function recordDeposit(session) {
+  const url = process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    console.warn('Supabase service credentials missing; skipping deposit record.');
+    return;
+  }
+  const supabase = createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  // upsert on the unique stripe_session_id so retried webhook events
+  // (Stripe may deliver the same event more than once) don't double-credit.
+  const { error } = await supabase.from('deposits').upsert(
+    {
+      user_id: session.metadata?.user_id || null,
+      stripe_session_id: session.id,
+      username: session.metadata?.username || null,
+      email: session.customer_email || null,
+      amount: session.amount_total != null ? session.amount_total / 100 : null,
+      status: 'completed',
+    },
+    { onConflict: 'stripe_session_id', ignoreDuplicates: true }
+  );
+  if (error) console.error('Failed to record deposit:', error.message);
+}
 
 // Get raw body for Stripe signature verification.
 // In newer Vercel runtimes with bodyParser:false, req.body is already a Buffer.
@@ -49,6 +78,11 @@ module.exports = async (req, res) => {
         amount: session.amount_total / 100,
         username: session.metadata?.username,
       });
+      try {
+        await recordDeposit(session);
+      } catch (err) {
+        console.error('Error recording deposit:', err.message);
+      }
       break;
     }
     case 'payment_intent.payment_failed': {
