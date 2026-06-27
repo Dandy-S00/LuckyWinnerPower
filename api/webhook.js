@@ -7,8 +7,9 @@ async function recordDeposit(session) {
   const url = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) {
-    console.warn('Supabase service credentials missing; skipping deposit record.');
-    return;
+    // Fail loudly so the webhook returns non-200 and Stripe retries, rather
+    // than silently dropping a paid deposit in a misconfigured deployment.
+    throw new Error('Supabase service credentials are not configured.');
   }
   const supabase = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -26,7 +27,10 @@ async function recordDeposit(session) {
     },
     { onConflict: 'stripe_session_id', ignoreDuplicates: true }
   );
-  if (error) console.error('Failed to record deposit:', error.message);
+  if (error) {
+    // Throw so the handler returns non-200 and Stripe retries the (idempotent) event.
+    throw new Error('Failed to record deposit: ' + error.message);
+  }
 }
 
 // Get raw body for Stripe signature verification.
@@ -81,7 +85,9 @@ module.exports = async (req, res) => {
       try {
         await recordDeposit(session);
       } catch (err) {
+        // Return non-200 so Stripe retries delivery; the upsert is idempotent.
         console.error('Error recording deposit:', err.message);
+        return res.status(500).json({ error: 'Failed to record deposit' });
       }
       break;
     }

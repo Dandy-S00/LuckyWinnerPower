@@ -28,6 +28,9 @@
         auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
       });
     })();
+    // Don't cache a rejected promise: a transient failure (config fetch error,
+    // CDN not loaded yet) would otherwise break auth until a full page reload.
+    clientPromise.catch(function () { clientPromise = null; });
     return clientPromise;
   }
 

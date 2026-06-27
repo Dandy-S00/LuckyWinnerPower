@@ -6,7 +6,9 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Require a valid, age-verified account before creating a payment session.
+  // Require a valid, authenticated account before creating a payment session.
+  // Age (18+) is enforced at signup by the database trigger in supabase/setup.sql,
+  // so any account that can authenticate here has already passed the age check.
   const user = await verifyUser(req);
   if (!user) {
     return res.status(401).json({ error: 'Please log in to make a deposit.' });
