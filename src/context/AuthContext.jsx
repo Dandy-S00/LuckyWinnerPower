@@ -46,6 +46,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
+    let subscription = null;
     (async () => {
       try {
         const client = await getClient();
@@ -54,16 +55,13 @@ export function AuthProvider({ children }) {
           setSession(data.session);
           setUser(data.session?.user ?? null);
         }
-        const { data: { subscription } } = client.auth.onAuthStateChange((_event, newSession) => {
+        const { data: { subscription: sub } } = client.auth.onAuthStateChange((_event, newSession) => {
           if (mounted) {
             setSession(newSession);
             setUser(newSession?.user ?? null);
           }
         });
-        return () => {
-          mounted = false;
-          subscription.unsubscribe();
-        };
+        subscription = sub;
       } catch {
         if (mounted) {
           setUser(null);
@@ -73,7 +71,7 @@ export function AuthProvider({ children }) {
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => { mounted = false; subscription?.unsubscribe(); };
   }, [getClient]);
 
   const signUp = useCallback(async ({ email, password, dob }) => {
