@@ -93,8 +93,8 @@ module.exports = async (req, res) => {
         is_first_purchase: String(isFirstPurchase),
         product_type: productType,
       },
-      success_url: `${process.env.BASE_URL || 'https://your-domain.vercel.app'}/deposit-success.html?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.BASE_URL || 'https://your-domain.vercel.app'}/deposit.html?canceled=true`,
+      success_url: `${process.env.BASE_URL || 'https://your-domain.vercel.app'}/deposit-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.BASE_URL || 'https://your-domain.vercel.app'}/deposit?canceled=true`,
     });
 
     return res.status(200).json({ url: session.url, sessionId: session.id });
