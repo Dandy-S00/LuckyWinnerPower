@@ -63,7 +63,7 @@ You'll need three values:
 
 5. After adding the variables, go to **Deployments → ⋯ → Redeploy** so they take effect.
 
-> Note: the `@stripe-secret-key` style references in `vercel.json` just map env var names; setting the plain variables above in the dashboard is all you need.
+> Note: `vercel.json` no longer hard-codes secret references — the plain environment variables you set in the dashboard above are injected automatically. Just set them and redeploy.
 
 ---
 
@@ -93,4 +93,21 @@ Create an account with a DOB under 18 — the database trigger rejects it with "
 ## What enforces the age rule?
 
 - **Front end:** the signup form blocks under-18 dates and requires the attestation checkbox.
-- **Back end (cannot be bypassed):** a Postgres trigger recomputes age from the submitted date of birth on every signup and aborts the account creation if it's under 18. No government ID is ever requested — this is the legal self-attestation model used by sweepstakes/social-casino sites.
+- **Back end (cannot be bypassed):** a Postgres trigger recomputes age from the submitted date of birth on every signup and aborts the account creation if it's under 18. It also rejects future-dated births. No government ID is ever requested — this is the legal self-attestation model used by sweepstakes/social-casino sites.
+
+---
+
+## Part 6 — Production hardening (already in the code)
+
+These protections ship in the repo; no action needed beyond deploying. They are summarized here so you know what's in place.
+
+- **Security headers + Content-Security-Policy** (in `vercel.json`): a strict CSP restricts which origins scripts/styles/fonts/connections can come from (blocks injected third-party scripts and most XSS), plus `Strict-Transport-Security` (force HTTPS), `X-Frame-Options: DENY` + `frame-ancestors 'none'` (no clickjacking/embedding), `X-Content-Type-Options: nosniff`, and a locked-down `Permissions-Policy`.
+- **Rate limiting** (`lib/rateLimit.js`): the checkout and config endpoints are throttled per-IP and per-user to blunt abuse and runaway clients. This is a best-effort in-memory limiter — for a strict cross-instance guarantee under heavy load, back it with [Upstash Redis](https://upstash.com) (free tier) without changing the call sites. Note that **signup/login go straight to Supabase**, which applies its own auth rate limits.
+- **Server-side enforcement:** deposit amounts are validated on the server, the checkout endpoint verifies the Supabase login token, the webhook verifies Stripe's signature and records deposits idempotently (no double-credit on retried events), and secret keys never reach the browser.
+
+### Email at production scale (IMPORTANT)
+Supabase's **built-in email sender is heavily rate-limited** (a few messages per hour) and is for development only. Before real signup volume, do **one** of:
+1. **Custom SMTP** — Authentication → **Emails → SMTP Settings**, plug in Resend / SendGrid / Postmark / Amazon SES. Recommended if you want email confirmation on.
+2. **Turn off "Confirm email"** — Authentication → Providers → Email. Users can log in immediately after signup (simpler, no verification email).
+
+If you skip this, real users will hit "email rate limit exceeded" at signup.

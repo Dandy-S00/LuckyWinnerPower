@@ -77,6 +77,10 @@ begin
     raise exception 'Date of birth is required to create an account.';
   end if;
 
+  if dob > current_date then
+    raise exception 'Date of birth cannot be in the future.';
+  end if;
+
   computed_age := date_part('year', age(dob));
 
   if computed_age < 18 then
