@@ -474,6 +474,35 @@ a {
   50% { opacity: 0.3; }
 }
 
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  background: var(--tx-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.error-box {
+  background: rgba(191,10,48,0.2);
+  border: 1px solid var(--tx-red);
+  color: #ff6b6b;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.success-box {
+  background: rgba(76,175,80,0.2);
+  border: 1px solid #4CAF50;
+  color: #4CAF50;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   .hero-section {
     min-height: 60vh;
