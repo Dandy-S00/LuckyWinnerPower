@@ -40,8 +40,10 @@ export function AuthProvider({ children }) {
       });
     })();
     clientPromiseRef.current = promise;
+    promise.catch(() => { clientPromiseRef.current = null; });
     return promise;
-  }, [config]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -121,7 +123,6 @@ export function AuthProvider({ children }) {
       signIn,
       signOut,
       resendConfirmation,
-      getConfig,
       MIN_AGE,
       ageFromDob,
     }}>
