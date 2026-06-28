@@ -54,8 +54,13 @@ module.exports = async function handler(req, res) {
 
 function safeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    crypto.timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
 }
 
 async function findUserByEmail(email) {

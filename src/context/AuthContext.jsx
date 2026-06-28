@@ -20,29 +20,28 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState(null);
-  const clientRef = useRef(null);
+  const clientPromiseRef = useRef(null);
 
-  const getConfig = useCallback(async () => {
-    if (config) return config;
-    const res = await fetch('/api/config');
-    if (!res.ok) throw new Error('Could not load site configuration.');
-    const cfg = await res.json();
-    setConfig(cfg);
-    return cfg;
+  const getClient = useCallback(() => {
+    if (clientPromiseRef.current) return clientPromiseRef.current;
+    const promise = (async () => {
+      let cfg = config;
+      if (!cfg) {
+        const res = await fetch('/api/config');
+        if (!res.ok) throw new Error('Could not load site configuration.');
+        cfg = await res.json();
+        setConfig(cfg);
+      }
+      if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) {
+        throw new Error('Accounts are not configured yet.');
+      }
+      return createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+      });
+    })();
+    clientPromiseRef.current = promise;
+    return promise;
   }, [config]);
-
-  const getClient = useCallback(async () => {
-    if (clientRef.current) return clientRef.current;
-    const cfg = await getConfig();
-    if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) {
-      throw new Error('Accounts are not configured yet.');
-    }
-    const client = createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
-    });
-    clientRef.current = client;
-    return client;
-  }, [getConfig]);
 
   useEffect(() => {
     let mounted = true;
