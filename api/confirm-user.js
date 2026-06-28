@@ -1,16 +1,12 @@
 const crypto = require('crypto');
-const { enforce } = require('../lib/rateLimit');
+const { enforce, clientIp } = require('../lib/rateLimit');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim();
-  const limitError = enforce(`admin-confirm:${ip}`, 5);
-  if (limitError) {
-    return res.status(429).json({ error: limitError });
-  }
+  if (!enforce(req, res, 'admin-confirm:' + clientIp(req), 5)) return;
 
   const adminKey = req.headers['x-admin-key'];
   if (!adminKey || !safeEqual(adminKey, process.env.SUPABASE_SERVICE_ROLE_KEY)) {
