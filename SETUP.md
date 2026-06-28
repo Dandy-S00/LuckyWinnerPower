@@ -47,7 +47,7 @@ You'll need three values:
 ## Part 3 — Deploy to Vercel and add environment variables
 
 1. Go to <https://vercel.com>, sign in with GitHub, and **Add New → Project**.
-2. Import the `Dandy-S00/LuckyWinnerPower` repo. Vercel auto-detects the config — just click **Deploy**.
+2. Import the `Dandy-S00/LuckyWinnerPower` repo. `vercel.json` uses Vercel zero-config: the `api/` folder is auto-detected as serverless functions and the `public/` folder is served as static files at the site root (it only adds security headers). Just click **Deploy**.
 3. After the first deploy you'll get a URL like `https://texas-winners.vercel.app`. Copy it.
 4. Go to **Project → Settings → Environment Variables** and add all of these (Production + Preview):
 
