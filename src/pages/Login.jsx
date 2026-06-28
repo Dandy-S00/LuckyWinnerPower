@@ -5,13 +5,15 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function Login() {
-  const { signIn } = useAuth();
+  const { signIn, resendConfirmation } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [resendStatus, setResendStatus] = useState('');
 
   function safeNext() {
     const next = searchParams.get('next');
@@ -22,6 +24,8 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    setNeedsConfirmation(false);
+    setResendStatus('');
 
     if (!email.trim()) return setError('Please enter your email address.');
     if (!password) return setError('Please enter your password.');
@@ -33,12 +37,24 @@ export default function Login() {
     } catch (err) {
       let msg = err.message || 'Login failed. Please try again.';
       if (/email not confirmed/i.test(msg)) {
-        msg = 'Please confirm your email address first. Check your inbox for the confirmation link.';
+        msg = 'Your email address has not been confirmed yet. Check your inbox (and spam folder) for the confirmation link, or click below to resend it.';
+        setNeedsConfirmation(true);
       } else if (/invalid login credentials/i.test(msg)) {
         msg = 'Incorrect email or password.';
       }
       setError(msg);
       setSubmitting(false);
+    }
+  }
+
+  async function handleResend() {
+    setResendStatus('sending');
+    try {
+      await resendConfirmation(email.trim());
+      setResendStatus('sent');
+    } catch (err) {
+      setResendStatus('error');
+      setError(err.message || 'Failed to resend confirmation email.');
     }
   }
 
@@ -92,6 +108,28 @@ export default function Login() {
               </button>
             </form>
             {error && <div className="error-box">{error}</div>}
+            {needsConfirmation && (
+              <div className="text-center mt-3">
+                {resendStatus === 'sent' ? (
+                  <div className="success-box">
+                    <i className="fas fa-check-circle me-1"></i> Confirmation email sent! Check your inbox and spam folder, then come back and log in.
+                  </div>
+                ) : (
+                  <button
+                    className="btn-texas-outline"
+                    onClick={handleResend}
+                    disabled={resendStatus === 'sending'}
+                    style={{ fontSize: '0.9rem', padding: '0.5rem 1.5rem' }}
+                  >
+                    {resendStatus === 'sending' ? (
+                      <><i className="fas fa-spinner fa-spin me-1"></i> Sending...</>
+                    ) : (
+                      <><i className="fas fa-envelope me-1"></i> Resend Confirmation Email</>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
             <p className="text-center mt-3" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
               No account yet? <Link to="/signup" style={{ color: 'var(--tx-gold)' }}>Create one here</Link>.
             </p>

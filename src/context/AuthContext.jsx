@@ -106,6 +106,12 @@ export function AuthProvider({ children }) {
     setSession(null);
   }, [getClient]);
 
+  const resendConfirmation = useCallback(async (email) => {
+    const client = await getClient();
+    const { error } = await client.auth.resend({ type: 'signup', email });
+    if (error) throw error;
+  }, [getClient]);
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -115,6 +121,7 @@ export function AuthProvider({ children }) {
       signUp,
       signIn,
       signOut,
+      resendConfirmation,
       getConfig,
       MIN_AGE,
       ageFromDob,
