@@ -11,16 +11,20 @@
     }
   ],
   "routes": [
+    {
+      "src": "/(.*)",
+      "headers": {
+        "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'"
+      },
+      "continue": true
+    },
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/public/$1" }
-  ],
-  "env": {
-    "STRIPE_SECRET_KEY": "@stripe-secret-key",
-    "STRIPE_PUBLISHABLE_KEY": "@stripe-publishable-key",
-    "STRIPE_WEBHOOK_SECRET": "@stripe-webhook-secret",
-    "BASE_URL": "@base-url",
-    "SUPABASE_URL": "@supabase-url",
-    "SUPABASE_ANON_KEY": "@supabase-anon-key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key"
-  }
+  ]
 }

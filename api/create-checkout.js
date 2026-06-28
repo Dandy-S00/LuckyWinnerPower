@@ -1,11 +1,15 @@
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 const { verifyUser } = require('../lib/verifyUser');
+const { enforce, clientIp } = require('../lib/rateLimit');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Coarse per-IP throttle before doing any auth/DB/Stripe work, to blunt bursts.
+  if (!enforce(req, res, 'checkout-ip:' + clientIp(req), 20)) return;
 
   // Require a valid, authenticated account before creating a payment session.
   // Age (18+) is enforced at signup by the database trigger in supabase/setup.sql,
@@ -14,6 +18,10 @@ module.exports = async (req, res) => {
   if (!user) {
     return res.status(401).json({ error: 'Please log in to make a deposit.' });
   }
+
+  // Per-user throttle: a logged-in user should not be opening dozens of
+  // checkout sessions per minute.
+  if (!enforce(req, res, 'checkout-user:' + user.id, 8)) return;
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const body = req.body || {};
