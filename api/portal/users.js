@@ -140,8 +140,16 @@ async function createPlayer(req, res, caller) {
     const userId = created.user.id;
 
     // The signup trigger created the profile (role='player'); set attribution.
+    // If it fails, roll back the auth user so we don't report a bogus assignment.
     if (distributorId) {
-      await supabase.from('profiles').update({ distributor_id: distributorId }).eq('id', userId);
+      const { error: attrErr } = await supabase
+        .from('profiles')
+        .update({ distributor_id: distributorId })
+        .eq('id', userId);
+      if (attrErr) {
+        await supabase.auth.admin.deleteUser(userId).catch(() => {});
+        return res.status(500).json({ error: 'Could not attribute the new player to the distributor.' });
+      }
     }
 
     const { data: distRow } = distributorId
