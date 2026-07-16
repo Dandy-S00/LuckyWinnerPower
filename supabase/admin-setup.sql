@@ -158,3 +158,66 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- ---------------------------------------------------------------------
+-- 5. ATOMIC BALANCE ADJUSTMENT
+--    Locks the player row, computes the new balance, updates it, and
+--    writes the audit ledger row -- all in one transaction. This avoids
+--    lost updates from concurrent adjustments and guarantees every
+--    balance change has a matching ledger entry.
+--    Called only by the service-role API (api/portal/balance.js).
+-- ---------------------------------------------------------------------
+create or replace function public.adjust_balance(
+  p_user_id uuid,
+  p_action text,
+  p_amount numeric,
+  p_actor_id uuid,
+  p_actor_role text,
+  p_note text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_prev numeric(12, 2);
+  v_next numeric(12, 2);
+  v_role text;
+begin
+  -- Lock the player's row for the duration of the transaction.
+  select balance, role into v_prev, v_role
+  from public.profiles
+  where id = p_user_id
+  for update;
+
+  if not found or v_role <> 'player' then
+    raise exception 'PLAYER_NOT_FOUND';
+  end if;
+
+  if p_action = 'zero' then
+    v_next := 0;
+  elsif p_action = 'set' then
+    v_next := p_amount;
+  elsif p_action = 'add' then
+    v_next := v_prev + p_amount;
+  else
+    raise exception 'INVALID_ACTION';
+  end if;
+
+  if v_next < 0 then
+    raise exception 'NEGATIVE_BALANCE';
+  end if;
+
+  v_next := round(v_next, 2);
+
+  update public.profiles set balance = v_next where id = p_user_id;
+
+  insert into public.balance_adjustments
+    (user_id, actor_id, actor_role, previous_balance, new_balance, note)
+  values
+    (p_user_id, p_actor_id, p_actor_role, v_prev, v_next, p_note);
+
+  return jsonb_build_object('previous', v_prev, 'next', v_next);
+end;
+$$;

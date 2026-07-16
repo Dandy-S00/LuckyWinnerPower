@@ -37,57 +37,48 @@ module.exports = async (req, res) => {
   try {
     const supabase = getAdminClient();
 
+    // Distributors may only touch players assigned to them; check up front for
+    // a clear 403/404. The actual mutation is done atomically in the DB below.
     const { data: profile, error: pErr } = await supabase
       .from('profiles')
-      .select('id, balance, distributor_id, role')
+      .select('id, distributor_id, role')
       .eq('id', userId)
       .maybeSingle();
     if (pErr) throw pErr;
     if (!profile || profile.role !== 'player') {
       return res.status(404).json({ error: 'Player not found.' });
     }
-
     if (caller.role === 'distributor' && profile.distributor_id !== caller.distributorId) {
       return res.status(403).json({ error: 'This player is not assigned to you.' });
     }
 
-    const previous = Number(profile.balance || 0);
-    let next;
-    if (action === 'zero') {
-      next = 0;
-    } else if (action === 'set') {
-      next = amount;
-    } else {
-      next = previous + amount;
+    // Atomic: locks the row, computes + writes the balance, and inserts the
+    // audit ledger row in a single transaction (see public.adjust_balance).
+    const { data: result, error: rpcErr } = await supabase.rpc('adjust_balance', {
+      p_user_id: userId,
+      p_action: action,
+      p_amount: amount,
+      p_actor_id: caller.user.id,
+      p_actor_role: caller.role,
+      p_note: note,
+    });
+
+    if (rpcErr) {
+      const msg = rpcErr.message || '';
+      if (msg.includes('PLAYER_NOT_FOUND')) {
+        return res.status(404).json({ error: 'Player not found.' });
+      }
+      if (msg.includes('NEGATIVE_BALANCE')) {
+        return res.status(400).json({ error: 'Balance cannot go below $0.00.' });
+      }
+      if (msg.includes('INVALID_ACTION')) {
+        return res.status(400).json({ error: "action must be 'set', 'zero', or 'add'." });
+      }
+      throw rpcErr;
     }
 
-    if (next < 0) {
-      return res.status(400).json({ error: 'Balance cannot go below $0.00.' });
-    }
-    next = Math.round(next * 100) / 100;
-
-    const { error: uErr } = await supabase
-      .from('profiles')
-      .update({ balance: next })
-      .eq('id', userId);
-    if (uErr) throw uErr;
-
-    // Best-effort audit entry; a failure here must not undo the balance change.
-    await supabase
-      .from('balance_adjustments')
-      .insert({
-        user_id: userId,
-        actor_id: caller.user.id,
-        actor_role: caller.role,
-        previous_balance: previous,
-        new_balance: next,
-        note,
-      })
-      .then(({ error }) => {
-        if (error) console.error('Ledger insert failed:', error.message);
-      });
-
-    return res.status(200).json({ userId, balance: next });
+    const next = Number(result?.next ?? 0);
+    return res.status(200).json({ userId, balance: next, previous: Number(result?.previous ?? 0) });
   } catch (err) {
     console.error('Balance adjust error:', err.message);
     return res.status(500).json({ error: 'Failed to update balance.' });
