@@ -80,12 +80,11 @@ async function createDistributor(supabase, req, res, caller) {
 
   try {
     // Reject a duplicate code up front (also enforced by a unique index).
-    const { data: existing } = await supabase
-      .from('distributors')
-      .select('id')
-      .ilike('code', code)
-      .maybeSingle();
-    if (existing) {
+    // Compare case-insensitively in JS: ilike would treat '_' in codes as a
+    // wildcard and could falsely match an unrelated code.
+    const { data: existingCodes } = await supabase.from('distributors').select('code');
+    const wanted = code.toLowerCase();
+    if ((existingCodes || []).some((d) => (d.code || '').toLowerCase() === wanted)) {
       return res.status(409).json({ error: 'That distributor code is already in use.' });
     }
 
