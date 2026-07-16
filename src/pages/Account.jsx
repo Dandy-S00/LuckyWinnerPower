@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
@@ -5,8 +6,28 @@ import Footer from '../components/Footer';
 import AuthGate from '../components/AuthGate';
 
 export default function Account() {
-  const { user, signOut } = useAuth();
+  const { user, session, signOut } = useAuth();
   const navigate = useNavigate();
+  const [portalRole, setPortalRole] = useState(null);
+
+  useEffect(() => {
+    if (!session?.access_token) return;
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/portal/me', {
+          headers: { Authorization: 'Bearer ' + session.access_token },
+        });
+        const data = await res.json();
+        if (active && (data.role === 'admin' || data.role === 'distributor')) {
+          setPortalRole(data.role);
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => { active = false; };
+  }, [session]);
 
   async function handleLogout() {
     await signOut();
@@ -41,6 +62,17 @@ export default function Account() {
                 <i className="fas fa-check-circle me-1"></i> Verified 18+
               </div>
             </div>
+            {portalRole && (
+              <div className="mb-4">
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>Portal Access</span>
+                <div>
+                  <Link to="/admin" className="btn-texas mt-2">
+                    <i className="fas fa-gauge-high me-2"></i>
+                    {portalRole === 'admin' ? 'Open Admin Portal' : 'Open Distributor Portal'}
+                  </Link>
+                </div>
+              </div>
+            )}
             <div className="d-flex gap-3 flex-wrap">
               <Link to="/games" className="btn-texas"><i className="fas fa-gamepad me-2"></i>Play Games</Link>
               <Link to="/deposit" className="btn-texas-outline"><i className="fas fa-dollar-sign me-2"></i>Deposit</Link>

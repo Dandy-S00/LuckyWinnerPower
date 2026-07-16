@@ -111,3 +111,35 @@ Supabase's **built-in email sender is heavily rate-limited** (a few messages per
 2. **Turn off "Confirm email"** — Authentication → Providers → Email. Users can log in immediately after signup (simpler, no verification email).
 
 If you skip this, real users will hit "email rate limit exceeded" at signup.
+
+---
+
+## Part 7 — Admin Portal & Distributors
+
+The `/admin` route is a role-aware portal for managing users, distributors, and in-app balances. Access is enforced **server-side** — there are no client-only "admin" flags.
+
+### One-time database setup
+1. In Supabase → **SQL Editor → New query**, run [`supabase/admin-setup.sql`](supabase/admin-setup.sql) (safe to re-run). It adds:
+   - a `distributors` table (each distributor is a login that sees only its own players),
+   - `role`, `balance`, and `distributor_id` columns on `profiles`,
+   - a `balance_adjustments` audit ledger (records every balance change: who, when, from → to),
+   - an updated signup trigger that attributes each new player to the distributor code they signed up with.
+
+### Make yourself an admin
+1. In **Vercel → Settings → Environment Variables**, add **`ADMIN_EMAILS`** = your login email (comma-separate multiple admins).
+2. Sign up / log in on the live site with that email. Go to **My Account → Open Admin Portal**, or visit `/admin` directly.
+   - Admins see **all** users and a **Distributors** tab.
+   - Non-admins are redirected away; direct API calls from non-admins are rejected with 403.
+
+### Creating distributors
+- In the **Distributors** tab, click **Add Distributor** and set a name, a referral **code** (e.g. `SAMMY`), and a login email + password.
+- Share the distributor's referral link — `https://your-domain.vercel.app/signup?ref=SAMMY` — or have players type the code on the signup form. Players who sign up with that code are attributed to the distributor.
+- The distributor logs in with the email/password you set and sees **only their own** players at `/admin`, where they can manage those players' balances.
+
+### Creating player accounts directly
+- Both admins and distributors can create player accounts from the **Users** tab via **Create User** (email, password, and a date of birth that is validated 18+ server-side).
+- Admins can assign the new player to any distributor (or leave unassigned); distributors' created players are automatically assigned to themselves.
+
+### Balances & "zeroing out"
+- Each player has an **in-app balance**. In the Users table, **Set** changes it to a specific amount and **Zero out** resets it to `$0.00` (with a confirm prompt).
+- Every change is written to the `balance_adjustments` ledger for accountability. **Zeroing a balance never deletes deposit/payment history** — Stripe deposits stay intact.
