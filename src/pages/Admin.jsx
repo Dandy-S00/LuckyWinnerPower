@@ -114,6 +114,11 @@ function UsersTab({ role, authHeaders }) {
   const [search, setSearch] = useState('');
   const [filterDist, setFilterDist] = useState('');
   const [busyId, setBusyId] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
+  const [newUser, setNewUser] = useState({ email: '', password: '', dob: '', distributorId: '' });
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [createSuccess, setCreateSuccess] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -185,6 +190,35 @@ function UsersTab({ role, authHeaders }) {
     }
   }
 
+  async function handleCreateUser(e) {
+    e.preventDefault();
+    setCreateError('');
+    setCreateSuccess('');
+    setCreating(true);
+    try {
+      const payload = {
+        email: newUser.email.trim(),
+        password: newUser.password,
+        dob: newUser.dob,
+      };
+      if (role === 'admin' && newUser.distributorId) payload.distributorId = newUser.distributorId;
+      const res = await fetch('/api/portal/users', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create user.');
+      setUsers((prev) => [data.user, ...prev]);
+      setCreateSuccess(`User "${data.user.email}" created.`);
+      setNewUser({ email: '', password: '', dob: '', distributorId: '' });
+    } catch (err) {
+      setCreateError(err.message);
+    } finally {
+      setCreating(false);
+    }
+  }
+
   const filtered = users.filter((u) => {
     const matchesSearch = !search || (u.email || '').toLowerCase().includes(search.toLowerCase());
     const matchesDist = !filterDist || u.distributorId === filterDist;
@@ -211,7 +245,59 @@ function UsersTab({ role, authHeaders }) {
         <button className="btn-texas-outline" onClick={load} disabled={loading}>
           <i className="fas fa-rotate me-1"></i> Refresh
         </button>
+        <button className="btn-texas-outline" onClick={() => setShowCreate((v) => !v)}>
+          <i className="fas fa-user-plus me-1"></i> {showCreate ? 'Close' : 'Create User'}
+        </button>
       </div>
+
+      {showCreate && (
+        <div className="deposit-form-card" style={{ marginBottom: '1.5rem' }}>
+          <h4 style={{ color: 'var(--tx-gold)', fontFamily: "'Playfair Display', serif" }}>
+            <i className="fas fa-user-plus me-2"></i>Create Player Account
+          </h4>
+          <form onSubmit={handleCreateUser}>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label">Email</label>
+                <input type="email" className="form-control" value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} required />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Password</label>
+                <input type="text" className="form-control" value={newUser.password} placeholder="At least 8 characters"
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} required />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Date of Birth (must be 18+)</label>
+                <input type="date" className="form-control" value={newUser.dob}
+                  onChange={(e) => setNewUser({ ...newUser, dob: e.target.value })} required />
+              </div>
+              {role === 'admin' && (
+                <div className="col-md-6">
+                  <label className="form-label">Distributor <span style={{ opacity: 0.5 }}>(optional)</span></label>
+                  <select className="form-select" value={newUser.distributorId}
+                    onChange={(e) => setNewUser({ ...newUser, distributorId: e.target.value })}>
+                    <option value="">Unassigned</option>
+                    {distributors.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="col-12">
+                <button type="submit" className="btn-texas" disabled={creating}>
+                  {creating ? (<><i className="fas fa-spinner fa-spin me-2"></i>Creating...</>) : (<><i className="fas fa-user-plus me-2"></i>Create User</>)}
+                </button>
+              </div>
+            </div>
+          </form>
+          {role === 'distributor' && (
+            <small style={{ color: 'rgba(255,255,255,0.5)' }}>New players are automatically assigned to you.</small>
+          )}
+          {createError && <div className="error-box">{createError}</div>}
+          {createSuccess && <div className="success-box">{createSuccess}</div>}
+        </div>
+      )}
 
       {error && <div className="error-box">{error}</div>}
       {loading ? (

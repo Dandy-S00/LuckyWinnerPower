@@ -136,6 +136,10 @@ The `/admin` route is a role-aware portal for managing users, distributors, and 
 - Share the distributor's referral link — `https://your-domain.vercel.app/signup?ref=SAMMY` — or have players type the code on the signup form. Players who sign up with that code are attributed to the distributor.
 - The distributor logs in with the email/password you set and sees **only their own** players at `/admin`, where they can manage those players' balances.
 
+### Creating player accounts directly
+- Both admins and distributors can create player accounts from the **Users** tab via **Create User** (email, password, and a date of birth that is validated 18+ server-side).
+- Admins can assign the new player to any distributor (or leave unassigned); distributors' created players are automatically assigned to themselves.
+
 ### Balances & "zeroing out"
 - Each player has an **in-app balance**. In the Users table, **Set** changes it to a specific amount and **Zero out** resets it to `$0.00` (with a confirm prompt).
 - Every change is written to the `balance_adjustments` ledger for accountability. **Zeroing a balance never deletes deposit/payment history** — Stripe deposits stay intact.
