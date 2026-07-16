@@ -9,6 +9,7 @@ import DepositSuccess from './pages/DepositSuccess';
 import Account from './pages/Account';
 import Promotions from './pages/Promotions';
 import Contact from './pages/Contact';
+import Admin from './pages/Admin';
 import ScrollToTop from './components/ScrollToTop';
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/account" element={<Account />} />
           <Route path="/promotions" element={<Promotions />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/admin" element={<Admin />} />
           {/* Redirect old .html bookmarks and unknown paths to home */}
           <Route path="/index.html" element={<Navigate to="/" replace />} />
           <Route path="/login.html" element={<Navigate to="/login" replace />} />

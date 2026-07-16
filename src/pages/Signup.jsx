@@ -1,20 +1,27 @@
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function Signup() {
   const { signUp, ageFromDob, MIN_AGE } = useAuth();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
   const [dob, setDob] = useState('');
+  const [distributorCode, setDistributorCode] = useState('');
   const [ageChecked, setAgeChecked] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) setDistributorCode(ref.trim());
+  }, [searchParams]);
 
   const maxDob = useMemo(() => {
     const cutoff = new Date();
@@ -42,7 +49,7 @@ export default function Signup() {
 
     setSubmitting(true);
     try {
-      await signUp({ email: email.trim(), password, dob });
+      await signUp({ email: email.trim(), password, dob, distributorCode });
       setSuccess(true);
     } catch (err) {
       setError(err.message || 'Could not create account. Please try again.');
@@ -93,6 +100,14 @@ export default function Signup() {
                     <input type="date" className="form-control" id="signupDob" max={maxDob}
                       value={dob} onChange={(e) => setDob(e.target.value)} required />
                     <small style={{ color: 'rgba(255,255,255,0.5)' }}>You must be 18 or older to play. We never ask for a government ID.</small>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label" htmlFor="signupDistributor">
+                      <i className="fas fa-store me-1"></i> Distributor Code <span style={{ opacity: 0.5 }}>(optional)</span>
+                    </label>
+                    <input type="text" className="form-control" id="signupDistributor" placeholder="e.g. SAMMY"
+                      value={distributorCode} onChange={(e) => setDistributorCode(e.target.value)} />
+                    <small style={{ color: 'rgba(255,255,255,0.5)' }}>If a distributor referred you, enter their code so they can manage your account.</small>
                   </div>
                   <div className="col-12">
                     <div className="form-check" style={{ color: 'rgba(255,255,255,0.7)' }}>

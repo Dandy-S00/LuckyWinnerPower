@@ -75,10 +75,14 @@ export function AuthProvider({ children }) {
     return () => { mounted = false; subscription?.unsubscribe(); };
   }, [getClient]);
 
-  const signUp = useCallback(async ({ email, password, dob }) => {
+  const signUp = useCallback(async ({ email, password, dob, distributorCode }) => {
     const age = ageFromDob(dob);
     if (isNaN(age)) throw new Error('Please enter a valid date of birth.');
     if (age < MIN_AGE) throw new Error('You must be at least 18 years old to create an account.');
+
+    const meta = { date_of_birth: dob, age_attested: true };
+    const code = (distributorCode || '').trim();
+    if (code) meta.distributor_code = code;
 
     const client = await getClient();
     const { data, error } = await client.auth.signUp({
@@ -86,7 +90,7 @@ export function AuthProvider({ children }) {
       password,
       options: {
         emailRedirectTo: window.location.origin + '/login',
-        data: { date_of_birth: dob, age_attested: true },
+        data: meta,
       },
     });
     if (error) throw error;
