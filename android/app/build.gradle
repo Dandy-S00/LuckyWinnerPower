@@ -1,0 +1,49 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'app.luckywinner'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 23
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    flavorDimensions "target"
+    productFlavors {
+        player {
+            dimension "target"
+            applicationId "app.luckywinner.player"
+            resValue "string", "app_name", "Lucky Winner Power"
+            buildConfigField "String", "START_URL", "\"https://lucky-winner-power.vercel.app\""
+        }
+        admin {
+            dimension "target"
+            applicationId "app.luckywinner.admin"
+            resValue "string", "app_name", "Lucky Winner Admin"
+            buildConfigField "String", "START_URL", "\"https://lucky-winner-power.vercel.app/admin\""
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+}
