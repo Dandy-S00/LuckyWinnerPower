@@ -4,7 +4,7 @@ const { enforce, clientIp } = require('../../lib/rateLimit');
 
 // Player accounts for the portal.
 //   GET  -> list players (admin: all; distributor: only theirs)
-//   POST -> create a player { email, password, dob, distributorId? }
+//   POST -> create a player { email, password, distributorId? }
 //           admin: distributorId optional (any distributor or unassigned)
 //           distributor: always attributed to the calling distributor
 module.exports = async (req, res) => {
@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
 
     let query = supabase
       .from('profiles')
-      .select('id, balance, distributor_id, created_at')
+      .select('id, username, balance, distributor_id, created_at')
       .eq('role', 'player')
       .order('created_at', { ascending: false });
 
@@ -64,6 +64,7 @@ module.exports = async (req, res) => {
     const users = rows.map((r) => ({
       id: r.id,
       email: emailMap.get(r.id) || null,
+      username: r.username || null,
       balance: Number(r.balance || 0),
       createdAt: r.created_at,
       distributorId: r.distributor_id,
@@ -78,31 +79,15 @@ module.exports = async (req, res) => {
   }
 };
 
-function ageFromDob(dob) {
-  const birth = new Date(dob + 'T00:00:00');
-  if (isNaN(birth.getTime())) return NaN;
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const m = now.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-  return age;
-}
-
 async function createPlayer(req, res, caller) {
   const body = req.body || {};
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   const password = typeof body.password === 'string' ? body.password : '';
-  const dob = typeof body.dob === 'string' ? body.dob.trim() : '';
 
   if (!email) return res.status(400).json({ error: 'Email is required.' });
   if (password.length < 8) {
     return res.status(400).json({ error: 'Password must be at least 8 characters.' });
   }
-  if (!dob) return res.status(400).json({ error: 'Date of birth is required.' });
-
-  const age = ageFromDob(dob);
-  if (!Number.isFinite(age)) return res.status(400).json({ error: 'Enter a valid date of birth.' });
-  if (age < 18) return res.status(400).json({ error: 'Player must be at least 18 years old.' });
 
   // Determine which distributor the new player belongs to.
   let distributorId = null;
@@ -129,7 +114,7 @@ async function createPlayer(req, res, caller) {
       email,
       password,
       email_confirm: true,
-      user_metadata: { role: 'player', date_of_birth: dob, age_attested: true },
+      user_metadata: { role: 'player' },
     });
     if (createErr || !created?.user) {
       const msg = createErr?.message || 'Could not create user.';
@@ -139,7 +124,8 @@ async function createPlayer(req, res, caller) {
 
     const userId = created.user.id;
 
-    // The signup trigger created the profile (role='player'); set attribution.
+    // The signup trigger created the profile (role='player') and assigned a
+    // username; set the distributor attribution now.
     // If it fails, roll back the auth user so we don't report a bogus assignment.
     if (distributorId) {
       const { error: attrErr } = await supabase
@@ -152,6 +138,12 @@ async function createPlayer(req, res, caller) {
       }
     }
 
+    const { data: profileRow } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .maybeSingle();
+
     const { data: distRow } = distributorId
       ? await supabase.from('distributors').select('name').eq('id', distributorId).maybeSingle()
       : { data: null };
@@ -160,6 +152,7 @@ async function createPlayer(req, res, caller) {
       user: {
         id: userId,
         email,
+        username: profileRow ? profileRow.username : null,
         balance: 0,
         createdAt: created.user.created_at || new Date().toISOString(),
         distributorId,

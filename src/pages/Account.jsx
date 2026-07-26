@@ -9,6 +9,7 @@ export default function Account() {
   const { user, session, signOut } = useAuth();
   const navigate = useNavigate();
   const [portalRole, setPortalRole] = useState(null);
+  const [username, setUsername] = useState(null);
 
   useEffect(() => {
     if (!session?.access_token) return;
@@ -19,7 +20,9 @@ export default function Account() {
           headers: { Authorization: 'Bearer ' + session.access_token },
         });
         const data = await res.json();
-        if (active && (data.role === 'admin' || data.role === 'distributor')) {
+        if (!active) return;
+        if (data.username) setUsername(data.username);
+        if (data.role === 'admin' || data.role === 'distributor') {
           setPortalRole(data.role);
         }
       } catch {
@@ -33,8 +36,6 @@ export default function Account() {
     await signOut();
     navigate('/');
   }
-
-  const dob = user?.user_metadata?.date_of_birth;
 
   return (
     <AuthGate>
@@ -52,15 +53,9 @@ export default function Account() {
               <span style={{ color: 'rgba(255,255,255,0.5)' }}>Email</span>
               <div style={{ color: '#fff', fontSize: '1.1rem' }}>{user?.email || '\u2014'}</div>
             </div>
-            <div className="mb-3">
-              <span style={{ color: 'rgba(255,255,255,0.5)' }}>Date of Birth</span>
-              <div style={{ color: '#fff', fontSize: '1.1rem' }}>{dob || 'Not provided'}</div>
-            </div>
             <div className="mb-4">
-              <span style={{ color: 'rgba(255,255,255,0.5)' }}>Age Verification</span>
-              <div style={{ color: '#4CAF50', fontSize: '1.1rem' }}>
-                <i className="fas fa-check-circle me-1"></i> Verified 18+
-              </div>
+              <span style={{ color: 'rgba(255,255,255,0.5)' }}>Username</span>
+              <div style={{ color: '#fff', fontSize: '1.1rem' }}>{username || '\u2014'}</div>
             </div>
             {portalRole && (
               <div className="mb-4">

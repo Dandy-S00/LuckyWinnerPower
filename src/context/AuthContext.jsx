@@ -3,18 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 
 const AuthContext = createContext(null);
 
-const MIN_AGE = 18;
-
-function ageFromDob(dob) {
-  const birth = new Date(dob + 'T00:00:00');
-  if (isNaN(birth.getTime())) return NaN;
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const m = now.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-  return age;
-}
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
@@ -75,12 +63,8 @@ export function AuthProvider({ children }) {
     return () => { mounted = false; subscription?.unsubscribe(); };
   }, [getClient]);
 
-  const signUp = useCallback(async ({ email, password, dob, distributorCode }) => {
-    const age = ageFromDob(dob);
-    if (isNaN(age)) throw new Error('Please enter a valid date of birth.');
-    if (age < MIN_AGE) throw new Error('You must be at least 18 years old to create an account.');
-
-    const meta = { date_of_birth: dob, age_attested: true };
+  const signUp = useCallback(async ({ email, password, distributorCode }) => {
+    const meta = {};
     const code = (distributorCode || '').trim();
     if (code) meta.distributor_code = code;
 
@@ -127,8 +111,6 @@ export function AuthProvider({ children }) {
       signIn,
       signOut,
       resendConfirmation,
-      MIN_AGE,
-      ageFromDob,
     }}>
       {children}
     </AuthContext.Provider>
