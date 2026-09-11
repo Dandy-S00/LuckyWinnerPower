@@ -115,7 +115,7 @@ function UsersTab({ role, authHeaders }) {
   const [filterDist, setFilterDist] = useState('');
   const [busyId, setBusyId] = useState('');
   const [showCreate, setShowCreate] = useState(false);
-  const [newUser, setNewUser] = useState({ email: '', password: '', dob: '', distributorId: '' });
+  const [newUser, setNewUser] = useState({ email: '', password: '', distributorId: '' });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
   const [createSuccess, setCreateSuccess] = useState('');
@@ -199,7 +199,6 @@ function UsersTab({ role, authHeaders }) {
       const payload = {
         email: newUser.email.trim(),
         password: newUser.password,
-        dob: newUser.dob,
       };
       if (role === 'admin' && newUser.distributorId) payload.distributorId = newUser.distributorId;
       const res = await fetch('/api/portal/users', {
@@ -210,8 +209,8 @@ function UsersTab({ role, authHeaders }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create user.');
       setUsers((prev) => [data.user, ...prev]);
-      setCreateSuccess(`User "${data.user.email}" created.`);
-      setNewUser({ email: '', password: '', dob: '', distributorId: '' });
+      setCreateSuccess(`User "${data.user.email}" created${data.user.username ? ` (username: ${data.user.username})` : ''}.`);
+      setNewUser({ email: '', password: '', distributorId: '' });
     } catch (err) {
       setCreateError(err.message);
     } finally {
@@ -220,7 +219,10 @@ function UsersTab({ role, authHeaders }) {
   }
 
   const filtered = users.filter((u) => {
-    const matchesSearch = !search || (u.email || '').toLowerCase().includes(search.toLowerCase());
+    const q = search.toLowerCase();
+    const matchesSearch = !search
+      || (u.email || '').toLowerCase().includes(q)
+      || (u.username || '').toLowerCase().includes(q);
     const matchesDist = !filterDist || u.distributorId === filterDist;
     return matchesSearch && matchesDist;
   });
@@ -230,7 +232,7 @@ function UsersTab({ role, authHeaders }) {
       <div className="admin-toolbar">
         <input
           className="form-control"
-          placeholder="Search by email..."
+          placeholder="Search by email or username..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -266,11 +268,6 @@ function UsersTab({ role, authHeaders }) {
                 <label className="form-label">Password</label>
                 <input type="text" className="form-control" value={newUser.password} placeholder="At least 8 characters"
                   onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} required />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Date of Birth (must be 18+)</label>
-                <input type="date" className="form-control" value={newUser.dob}
-                  onChange={(e) => setNewUser({ ...newUser, dob: e.target.value })} required />
               </div>
               {role === 'admin' && (
                 <div className="col-md-6">
@@ -310,6 +307,7 @@ function UsersTab({ role, authHeaders }) {
             <thead>
               <tr>
                 <th>Email</th>
+                <th>Username</th>
                 <th>Distributor</th>
                 <th>Balance</th>
                 <th>Total Deposits</th>
@@ -321,6 +319,7 @@ function UsersTab({ role, authHeaders }) {
               {filtered.map((u) => (
                 <tr key={u.id}>
                   <td>{u.email || <span style={{ opacity: 0.5 }}>—</span>}</td>
+                  <td>{u.username || <span style={{ opacity: 0.5 }}>—</span>}</td>
                   <td>
                     {role === 'admin' ? (
                       <select
