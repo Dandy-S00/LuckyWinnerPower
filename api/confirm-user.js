@@ -1,7 +1,9 @@
 const crypto = require('crypto');
 const { enforce, clientIp } = require('../lib/rateLimit');
+const { startRequestTrace } = require('../lib/tracing');
 
 module.exports = async function handler(req, res) {
+  startRequestTrace(req, res, 'api.confirm_user');
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

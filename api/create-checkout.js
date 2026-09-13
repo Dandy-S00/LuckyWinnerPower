@@ -2,8 +2,10 @@ const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 const { verifyUser } = require('../lib/verifyUser');
 const { enforce, clientIp } = require('../lib/rateLimit');
+const { startRequestTrace } = require('../lib/tracing');
 
 module.exports = async (req, res) => {
+  startRequestTrace(req, res, 'api.create_checkout');
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

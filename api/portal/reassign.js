@@ -1,10 +1,12 @@
 const { requireRole } = require('../../lib/requireRole');
 const { getAdminClient } = require('../../lib/supabaseAdmin');
 const { enforce, clientIp } = require('../../lib/rateLimit');
+const { startRequestTrace } = require('../../lib/tracing');
 
 // Admin-only: reassign a player to a different distributor (or clear it).
 //   Body: { userId, distributorId } — distributorId null/'' clears attribution.
 module.exports = async (req, res) => {
+  startRequestTrace(req, res, 'api.portal.reassign');
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

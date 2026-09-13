@@ -1,13 +1,15 @@
 const { requireRole } = require('../../lib/requireRole');
 const { getAdminClient } = require('../../lib/supabaseAdmin');
 const { enforce, clientIp } = require('../../lib/rateLimit');
+const { startRequestTrace } = require('../../lib/tracing');
 
 // Player accounts for the portal.
 //   GET  -> list players (admin: all; distributor: only theirs)
-//   POST -> create a player { email, password, distributorId? }
+//   POST -> create a player { email, password, dateOfBirth, distributorId? }
 //           admin: distributorId optional (any distributor or unassigned)
 //           distributor: always attributed to the calling distributor
 module.exports = async (req, res) => {
+  startRequestTrace(req, res, 'api.portal.users');
   if (!enforce(req, res, 'portal-users-ip:' + clientIp(req), 60)) return;
 
   const caller = await requireRole(req, res, ['admin', 'distributor']);
@@ -83,10 +85,14 @@ async function createPlayer(req, res, caller) {
   const body = req.body || {};
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   const password = typeof body.password === 'string' ? body.password : '';
+  const dateOfBirth = typeof body.dateOfBirth === 'string' ? body.dateOfBirth : '';
 
   if (!email) return res.status(400).json({ error: 'Email is required.' });
   if (password.length < 8) {
     return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+    return res.status(400).json({ error: 'A valid date of birth is required.' });
   }
 
   // Determine which distributor the new player belongs to.
@@ -114,7 +120,7 @@ async function createPlayer(req, res, caller) {
       email,
       password,
       email_confirm: true,
-      user_metadata: { role: 'player' },
+      user_metadata: { role: 'player', date_of_birth: dateOfBirth },
     });
     if (createErr || !created?.user) {
       const msg = createErr?.message || 'Could not create user.';

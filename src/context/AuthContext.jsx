@@ -63,10 +63,11 @@ export function AuthProvider({ children }) {
     return () => { mounted = false; subscription?.unsubscribe(); };
   }, [getClient]);
 
-  const signUp = useCallback(async ({ email, password, distributorCode }) => {
+  const signUp = useCallback(async ({ email, password, dateOfBirth, distributorCode }) => {
     const meta = {};
     const code = (distributorCode || '').trim();
     if (code) meta.distributor_code = code;
+    if (dateOfBirth) meta.date_of_birth = dateOfBirth;
 
     const client = await getClient();
     const { data, error } = await client.auth.signUp({

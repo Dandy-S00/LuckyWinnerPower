@@ -1,10 +1,12 @@
 const { resolveCaller } = require('../../lib/requireRole');
 const { getAdminClient } = require('../../lib/supabaseAdmin');
 const { enforce, clientIp } = require('../../lib/rateLimit');
+const { startRequestTrace } = require('../../lib/tracing');
 
 // Returns the authenticated caller's portal role so the frontend can render
 // the correct dashboard. { role, distributorId, name }.
 module.exports = async (req, res) => {
+  startRequestTrace(req, res, 'api.portal.me');
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

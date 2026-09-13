@@ -638,3 +638,129 @@ a {
   background: rgba(191, 10, 48, 0.15);
   color: #ff6b6b;
 }
+
+/* ---------- In-app Texas game boards ---------- */
+.casino-games {
+  max-width: 980px;
+  margin: 0 auto;
+}
+.game-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.game-tab {
+  border: 1px solid rgba(212, 164, 55, 0.35);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.75);
+  border-radius: 8px;
+  padding: 0.7rem 1.1rem;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+.game-tab:hover,
+.game-tab.active {
+  background: var(--tx-gold);
+  color: var(--tx-dark);
+  border-color: var(--tx-gold);
+}
+.credits-bar {
+  align-items: center;
+  background: rgba(0, 40, 104, 0.65);
+  border: 1px solid rgba(212, 164, 55, 0.35);
+  border-radius: 8px;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+}
+.credits-bar strong { color: var(--tx-gold); }
+.credits-reset {
+  background: transparent;
+  border: 0;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.game-stage {
+  background: linear-gradient(145deg, rgba(0, 40, 104, 0.9), rgba(26, 26, 46, 0.98));
+  border: 1px solid rgba(212, 164, 55, 0.45);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+}
+.game-stage-heading { text-align: center; }
+.game-stage-heading h3 { color: var(--tx-gold); margin: 0.25rem 0; }
+.game-stage-heading p { color: rgba(255, 255, 255, 0.68); }
+.game-kicker {
+  color: var(--tx-red);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.slot-machine {
+  background: #120f16;
+  border: 10px solid #7d5b1d;
+  border-radius: 12px;
+  margin: 1.5rem auto 1rem;
+  max-width: 720px;
+  padding: 1.5rem;
+  position: relative;
+}
+.slot-reels { display: grid; gap: 0.75rem; grid-template-columns: repeat(3, 1fr); }
+.slot-reel {
+  align-items: center;
+  background: var(--tx-cream);
+  border: 3px solid var(--tx-gold);
+  border-radius: 8px;
+  color: var(--tx-navy);
+  display: flex;
+  font-family: 'Rye', cursive;
+  font-size: clamp(0.9rem, 3vw, 1.5rem);
+  font-weight: 900;
+  justify-content: center;
+  min-height: 110px;
+  padding: 0.5rem;
+  text-align: center;
+}
+.payline { border-top: 3px solid var(--tx-red); left: 1.5rem; position: absolute; right: 1.5rem; top: 50%; }
+.slot-spin { display: block; margin: 1.25rem auto 0; position: relative; }
+.game-controls { align-items: center; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+.game-controls label { color: var(--tx-gold); font-weight: 700; }
+.game-controls select,
+.roulette-options select {
+  background: var(--tx-darker);
+  border: 1px solid rgba(212, 164, 55, 0.5);
+  border-radius: 6px;
+  color: var(--tx-white);
+  padding: 0.55rem 0.75rem;
+}
+.game-message { color: rgba(255, 255, 255, 0.75); margin: 0; }
+.roulette-layout { align-items: center; display: grid; gap: 2rem; grid-template-columns: 0.8fr 1.2fr; margin-top: 1.5rem; }
+.roulette-wheel { align-items: center; aspect-ratio: 1; background: repeating-conic-gradient(#b71c1c 0 10deg, #171717 10deg 20deg); border: 9px solid var(--tx-gold); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; margin: auto; max-width: 260px; width: 100%; }
+.roulette-number { color: var(--tx-cream); font-family: 'Rye', cursive; font-size: 3rem; }
+.roulette-wheel span { color: var(--tx-cream); font-size: 0.75rem; text-transform: uppercase; }
+.roulette-options { display: grid; gap: 0.75rem; grid-template-columns: repeat(3, 1fr); }
+.roulette-options button { border: 2px solid transparent; border-radius: 7px; color: var(--tx-white); cursor: pointer; font-weight: 800; padding: 0.7rem; }
+.roulette-options button.selected { border-color: var(--tx-gold); box-shadow: 0 0 0 2px rgba(212, 164, 55, 0.25); }
+.roulette-options button small { display: block; font-weight: 400; opacity: 0.75; }
+.roulette-red { background: #b71c1c; }
+.roulette-black { background: #171717; }
+.roulette-green { background: #1b5e20; }
+.roulette-options label { align-self: center; color: var(--tx-gold); font-weight: 700; }
+.roulette-options .btn-texas { grid-column: 1 / -1; }
+.river-stage { background: linear-gradient(145deg, rgba(0, 77, 64, 0.9), rgba(15, 15, 26, 0.98)); }
+.river-cards { display: grid; gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 1.5rem auto; max-width: 650px; }
+.river-card { align-items: center; aspect-ratio: 0.72; background: rgba(255, 248, 231, 0.1); border: 2px dashed var(--tx-gold); border-radius: 8px; color: var(--tx-gold); display: flex; font-family: 'Rye', cursive; font-size: clamp(0.9rem, 3vw, 1.3rem); justify-content: center; padding: 0.5rem; text-align: center; }
+.river-card.revealed { background: var(--tx-cream); border-style: solid; color: var(--tx-navy); }
+
+@media (max-width: 600px) {
+  .credits-bar { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
+  .roulette-layout { grid-template-columns: 1fr; }
+  .roulette-options { grid-template-columns: repeat(3, 1fr); }
+}

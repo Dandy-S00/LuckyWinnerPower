@@ -48,7 +48,7 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists username text;
 
--- Date of birth is no longer collected at signup, so the column is optional.
+-- Staff accounts may omit date_of_birth, but player accounts must provide it.
 alter table public.profiles
   alter column date_of_birth drop not null;
 
@@ -171,12 +171,23 @@ begin
 
   new_username := public.gen_username();
 
-  -- Date of birth is optional. Validate it only when it is provided.
+  -- Staff accounts may omit DOB; player accounts must be age verified.
   if new.raw_user_meta_data ? 'date_of_birth' then
     dob := nullif(new.raw_user_meta_data ->> 'date_of_birth', '')::date;
-    if dob is not null and dob > current_date then
+  end if;
+
+  if meta_role = 'player' then
+    if dob is null then
+      raise exception 'Date of birth is required to create a player account.';
+    end if;
+    if dob > current_date then
       raise exception 'Date of birth cannot be in the future.';
     end if;
+    if date_part('year', age(dob)) < 18 then
+      raise exception 'You must be at least 18 years old to create an account.';
+    end if;
+  elsif dob is not null and dob > current_date then
+    raise exception 'Date of birth cannot be in the future.';
   end if;
 
   if meta_role = 'player' then
@@ -192,7 +203,7 @@ begin
     end if;
 
     insert into public.profiles (id, date_of_birth, age_verified, role, distributor_id, username)
-    values (new.id, dob, dob is not null, 'player', dist_id, new_username)
+    values (new.id, dob, true, 'player', dist_id, new_username)
     on conflict (id) do nothing;
   else
     -- Distributor/admin account (created via the admin API).

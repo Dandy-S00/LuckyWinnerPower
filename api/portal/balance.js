@@ -1,12 +1,14 @@
 const { requireRole } = require('../../lib/requireRole');
 const { getAdminClient } = require('../../lib/supabaseAdmin');
 const { enforce, clientIp } = require('../../lib/rateLimit');
+const { startRequestTrace } = require('../../lib/tracing');
 
 // Adjusts a player's in-app balance and records an audit ledger entry.
 //   Body: { userId, action: 'set' | 'zero' | 'add', amount?, note? }
 //   admin       -> any player
 //   distributor -> only players attributed to that distributor
 module.exports = async (req, res) => {
+  startRequestTrace(req, res, 'api.portal.balance');
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

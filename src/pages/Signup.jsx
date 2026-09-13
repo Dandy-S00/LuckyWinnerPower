@@ -10,6 +10,7 @@ export default function Signup() {
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [distributorCode, setDistributorCode] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -26,10 +27,19 @@ export default function Signup() {
 
     if (!email.trim()) return setError('Please enter your email address.');
     if (password.length < 8) return setError('Password must be at least 8 characters.');
+    if (!dateOfBirth) return setError('Please enter your date of birth.');
+
+    const birthDate = new Date(`${dateOfBirth}T00:00:00`);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear()
+      - (today < new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate()) ? 1 : 0);
+    if (Number.isNaN(birthDate.getTime()) || birthDate > today || age < 18) {
+      return setError('You must be at least 18 years old to create an account.');
+    }
 
     setSubmitting(true);
     try {
-      await signUp({ email: email.trim(), password, distributorCode });
+      await signUp({ email: email.trim(), password, dateOfBirth, distributorCode });
       // No email confirmation required — log the new user straight in.
       try {
         await signIn({ email: email.trim(), password });
@@ -64,6 +74,14 @@ export default function Signup() {
                   </label>
                   <input type="email" className="form-control" id="signupEmail" placeholder="your@email.com"
                     value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label" htmlFor="signupDateOfBirth">
+                    <i className="fas fa-calendar me-1"></i> Date of birth
+                  </label>
+                  <input type="date" className="form-control" id="signupDateOfBirth"
+                    max={new Date().toISOString().slice(0, 10)} value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)} required />
                 </div>
                 <div className="mb-4">
                   <label className="form-label" htmlFor="signupPassword">

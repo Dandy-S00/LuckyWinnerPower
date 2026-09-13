@@ -1,5 +1,6 @@
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
+const { startRequestTrace } = require('../lib/tracing');
 
 // Record a confirmed deposit into Supabase using the service-role key.
 // The service-role key bypasses RLS and must only ever be used server-side.
@@ -68,6 +69,7 @@ function getRawBody(req) {
 }
 
 module.exports = async (req, res) => {
+  startRequestTrace(req, res, 'api.stripe_webhook');
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -92,6 +94,10 @@ module.exports = async (req, res) => {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object;
+      if (session.payment_status !== 'paid') {
+        console.warn('Ignoring checkout session that is not paid:', session.id);
+        return res.status(200).json({ received: true });
+      }
       console.log('Payment successful:', {
         sessionId: session.id,
         email: session.customer_email,

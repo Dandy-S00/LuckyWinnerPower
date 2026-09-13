@@ -1,12 +1,14 @@
 const { requireRole } = require('../../lib/requireRole');
 const { getAdminClient } = require('../../lib/supabaseAdmin');
 const { enforce, clientIp } = require('../../lib/rateLimit');
+const { startRequestTrace } = require('../../lib/tracing');
 
 // Admin-only management of distributor accounts.
 //   GET   -> list distributors with player counts
 //   POST  -> create a distributor login { name, code, email, password }
 //   PATCH -> update a distributor { id, active?, name? }
 module.exports = async (req, res) => {
+  startRequestTrace(req, res, 'api.portal.distributors');
   if (!enforce(req, res, 'portal-dist-ip:' + clientIp(req), 40)) return;
 
   const caller = await requireRole(req, res, ['admin']);

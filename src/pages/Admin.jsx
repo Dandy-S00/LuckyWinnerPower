@@ -115,7 +115,7 @@ function UsersTab({ role, authHeaders }) {
   const [filterDist, setFilterDist] = useState('');
   const [busyId, setBusyId] = useState('');
   const [showCreate, setShowCreate] = useState(false);
-  const [newUser, setNewUser] = useState({ email: '', password: '', distributorId: '' });
+  const [newUser, setNewUser] = useState({ email: '', password: '', dateOfBirth: '', distributorId: '' });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
   const [createSuccess, setCreateSuccess] = useState('');
@@ -199,6 +199,7 @@ function UsersTab({ role, authHeaders }) {
       const payload = {
         email: newUser.email.trim(),
         password: newUser.password,
+        dateOfBirth: newUser.dateOfBirth,
       };
       if (role === 'admin' && newUser.distributorId) payload.distributorId = newUser.distributorId;
       const res = await fetch('/api/portal/users', {
@@ -210,7 +211,7 @@ function UsersTab({ role, authHeaders }) {
       if (!res.ok) throw new Error(data.error || 'Failed to create user.');
       setUsers((prev) => [data.user, ...prev]);
       setCreateSuccess(`User "${data.user.email}" created${data.user.username ? ` (username: ${data.user.username})` : ''}.`);
-      setNewUser({ email: '', password: '', distributorId: '' });
+      setNewUser({ email: '', password: '', dateOfBirth: '', distributorId: '' });
     } catch (err) {
       setCreateError(err.message);
     } finally {
@@ -259,6 +260,12 @@ function UsersTab({ role, authHeaders }) {
           </h4>
           <form onSubmit={handleCreateUser}>
             <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label">Date of birth</label>
+                <input type="date" className="form-control" value={newUser.dateOfBirth}
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setNewUser({ ...newUser, dateOfBirth: e.target.value })} required />
+              </div>
               <div className="col-md-6">
                 <label className="form-label">Email</label>
                 <input type="email" className="form-control" value={newUser.email}
