@@ -1,0 +1,7 @@
+import React,{useEffect,useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import {Activity,ShieldCheck,Gamepad2,Users,WalletCards,AlertTriangle} from 'lucide-react';
+import './styles.css';
+const API=import.meta.env.VITE_API_BASE_URL||'/api';
+function App(){const [status,setStatus]=useState('checking');const [data,setData]=useState(null);useEffect(()=>{fetch(`${API}/v1/admin/status`,{credentials:'include'}).then(r=>r.ok?r.json():Promise.reject()).then(x=>{setData(x);setStatus('online')}).catch(()=>setStatus('unavailable'))},[]);return <main><header><div><span className="eyebrow">CONTROL CENTER</span><h1>LuckyWinnerPower Admin</h1><p>Operations, games, ledger review, and audit visibility.</p></div><div className="status"><span className={status==='online'?'dot good':'dot'}></span>{status}</div></header><section className="grid">{[[Activity,'System health','API boundary and audit services'],[Users,'Players','Identity and account review'],[Gamepad2,'Game catalog','Rulesets and emergency controls'],[WalletCards,'Ledger review','Read-only reconciliation view'],[ShieldCheck,'Compliance','Verification and feature gates'],[AlertTriangle,'Audit log','Administrative actions']].map(([Icon,title,copy])=><article key={title}><Icon size={22}/><h2>{title}</h2><p>{copy}</p><button>Open module</button></article>)}</section><footer>API: {API} · regulated features: {data?.regulatedFeatures?'enabled':'gated'} · wallet mode: {data?.walletMode||'unknown'}</footer></main>}
+createRoot(document.getElementById('root')).render(<App/>);
